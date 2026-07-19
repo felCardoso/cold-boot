@@ -138,3 +138,4 @@ async def ws_endpoint(websocket: WebSocket) -> None:
     finally:
         ticker.cancel()
         manager.save(sid)  # rede de segurança: salva se estava em modo explorável
+        manager.drop(sid)  # libera a sessão da memória; recarrega do disco se reconectar
