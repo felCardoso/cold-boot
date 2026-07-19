@@ -8,6 +8,7 @@ ganha seu próprio filesystem de `procgen.filesystem` (com lore de
 from __future__ import annotations
 
 import random
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from . import puzzle
@@ -37,6 +38,11 @@ SECTOR_MODIFIERS: dict[str, SectorModifier] = {
     "high_alert": SectorModifier("high_alert", ice_penalty_mult=1.3, payout_mult=1.3),
     "ghost_net": SectorModifier("ghost_net", botnet_risk_mult=0.5, payout_mult=0.9),
     "soft_ice": SectorModifier("soft_ice", ice_penalty_mult=0.75, payout_mult=0.85),
+    # Os dois de baixo são o espelho dos dois de cima: mesma dobradiça
+    # (ambiente ambiente / botnet), só que cobrando o preço no risco em vez de
+    # no payout — cada eixo agora tem as duas direções representadas.
+    "noisy_signal": SectorModifier("noisy_signal", creep_mult=1.3, payout_mult=1.15),
+    "loud_botnet": SectorModifier("loud_botnet", botnet_risk_mult=1.5, payout_mult=1.15),
 }
 
 
@@ -147,8 +153,48 @@ def next_run(prev: GameState, won: bool, seed: int | None = None) -> GameState:
     st.run_number = prev.run_number + 1
     st.runs_won = prev.runs_won + (1 if won else 0)
     st.best_sector = max(prev.best_sector, sector)
+    # Meta lifetime: sobrevive à morte também (ao contrário de wallet).
+    st.total_earned = prev.total_earned
+    st.deaths = prev.deaths + (0 if won else 1)
+    st.achievements = set(prev.achievements)
     # O tutorial e as dicas já vistas não se repetem a cada setor.
     for k, v in prev.flags.items():
         if k.startswith("hint_") or k == "tutorial_done":
             st.flags[k] = v
     return st
+
+
+# --------------------------------------------------------------------------- #
+# Conquistas — meta-progressão além de best_sector. Cada uma é só um limiar
+# sobre estado que já sobrevive a mortes/setores (ver acima); nenhuma precisa
+# de contador novo dedicado.
+# --------------------------------------------------------------------------- #
+@dataclass(frozen=True)
+class Achievement:
+    id: str
+    check: Callable[[GameState], bool]
+
+
+ACHIEVEMENTS: list[Achievement] = [
+    Achievement("first_core", lambda st: st.runs_won >= 1),
+    Achievement("deep_5", lambda st: st.best_sector >= 5),
+    Achievement("deep_10", lambda st: st.best_sector >= 10),
+    Achievement("payout_1k", lambda st: st.total_earned >= 1000),
+    Achievement("payout_5k", lambda st: st.total_earned >= 5000),
+    Achievement("resilient", lambda st: st.deaths >= 3),
+    Achievement("veteran", lambda st: st.runs_won >= 10),
+]
+
+
+def unlock_achievements(state: GameState) -> list[str]:
+    """Confere o catálogo contra o estado atual e desbloqueia o que bater.
+
+    Devolve só os ids RECÉM desbloqueados nesta chamada (para narrar) — ids já
+    em `state.achievements` não voltam, então é seguro chamar de novo sem que
+    nada tenha mudado (idempotente)."""
+    newly: list[str] = []
+    for ach in ACHIEVEMENTS:
+        if ach.id not in state.achievements and ach.check(state):
+            state.achievements.add(ach.id)
+            newly.append(ach.id)
+    return newly

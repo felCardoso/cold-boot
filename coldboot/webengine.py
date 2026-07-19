@@ -23,7 +23,7 @@ from .economy import creep_mult, is_overheated, mining_noise, tick_economy, typi
 from .lockdown import LockdownSession
 from .procgen.filesystem import default_cwd
 from .state import FSNode, GameState
-from .world import VILLAIN_LINES, next_run, sector_payout
+from .world import ACHIEVEMENTS, VILLAIN_LINES, next_run, sector_payout, unlock_achievements
 
 
 def _log(msgs: list[dict], text: str, kind: str = "info") -> None:
@@ -188,6 +188,9 @@ class WebSession:
             "win",
         )
         self.state = next_run(st, won=True)
+        self.state.total_earned = round(self.state.total_earned + premio, 2)
+        for aid in unlock_achievements(self.state):
+            _log(msgs, i18n.t("app_achievement_unlocked", name=i18n.t(f"ach_{aid}_name")), "win")
 
     # ------------------------------------------------------------------ #
     # LOCKDOWN — submissão
@@ -554,6 +557,8 @@ class WebSession:
         if self.mode != "dead":
             return
         self.state = next_run(self.state, won=False)
+        for aid in unlock_achievements(self.state):
+            _log(msgs, i18n.t("app_achievement_unlocked", name=i18n.t(f"ach_{aid}_name")), "win")
         self.state.lockdown_level = 0
         self.combat = None
         self.lockdown = None
@@ -725,6 +730,10 @@ def snapshot(session: WebSession) -> dict:
         "villain_said": session.villain_said if session.mode == "dead" else None,
         "run_number": st.run_number,
         "runs_won": st.runs_won,
+        "total_earned": st.total_earned,
+        "deaths": st.deaths,
+        "achievements": len(st.achievements),
+        "achievements_total": len(ACHIEVEMENTS),
         "inventory": [
             {"name": it["name"], "kind": it.get("kind")} for it in st.inventory
         ],

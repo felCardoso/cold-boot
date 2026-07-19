@@ -24,7 +24,9 @@ SAVE_PATH = GAME_DIR / "save.json"
 #     derivado e entraram os contadores de incursão.
 # v3: rig.gpu (uma) virou rig.gpus (lista, uma por slot PCIe), entrou o
 #     roteador e o jogo passou a ter setores.
-SAVE_VERSION = 3
+# v4: entrou meta-progressão lifetime (total_earned/deaths/achievements),
+#     sobrevive a mortes igual run_number/best_sector.
+SAVE_VERSION = 4
 
 
 # --------------------------------------------------------------------------- #
@@ -119,6 +121,9 @@ def state_to_dict(state: GameState) -> dict:
         "mod_ice_penalty": state.mod_ice_penalty,
         "mod_botnet_risk": state.mod_botnet_risk,
         "mod_payout": state.mod_payout,
+        "total_earned": state.total_earned,
+        "deaths": state.deaths,
+        "achievements": sorted(state.achievements),
     }
 
 
@@ -163,6 +168,9 @@ def state_from_dict(d: dict) -> GameState:
     st.mod_ice_penalty = d.get("mod_ice_penalty", 1.0)
     st.mod_botnet_risk = d.get("mod_botnet_risk", 1.0)
     st.mod_payout = d.get("mod_payout", 1.0)
+    st.total_earned = d.get("total_earned", 0.0)
+    st.deaths = d.get("deaths", 0)
+    st.achievements = set(d.get("achievements", []))
     return st
 
 
@@ -202,6 +210,12 @@ def migrate(d: dict) -> dict | None:
         d.setdefault("sector", 1)
         d.setdefault("best_sector", 1)
         version = 3
+    if version == 3:
+        # v3 -> v4: meta-progressão lifetime nova, quem já jogava começa zerado.
+        d.setdefault("total_earned", 0.0)
+        d.setdefault("deaths", 0)
+        d.setdefault("achievements", [])
+        version = 4
     d["version"] = SAVE_VERSION
     return d if version == SAVE_VERSION else None
 
