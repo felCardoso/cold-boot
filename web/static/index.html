@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b0f0c">
+<title>COLD-BOOT</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div id="app">
+    <header id="statusbar">
+      <div class="statusbar-row">
+        <span class="stat"><span class="stat-label">SECTOR</span><span id="stat-sector">-</span></span>
+        <span class="stat"><span class="stat-label">HOST</span><span id="stat-host">-</span></span>
+        <span class="stat"><span class="stat-label">CRN</span><span id="stat-wallet">-</span></span>
+        <span class="stat">
+          <span class="stat-label">HEAT</span>
+          <span id="stat-heat">-</span>
+          <span id="stat-mining-icon" class="hidden" title="minerando"></span>
+        </span>
+      </div>
+      <div class="trace-row">
+        <span class="stat-label">TRACE</span>
+        <div class="trace-bar"><div id="trace-fill" class="trace-fill"></div></div>
+        <span id="trace-pct">0%</span>
+      </div>
+    </header>
+
+    <main id="explore">
+      <section id="map-section">
+        <h2 class="section-title">REDE</h2>
+        <div id="netmap"></div>
+      </section>
+
+      <section id="fs-section">
+        <div class="fs-header">
+          <button id="fs-up" class="btn-small">.. </button>
+          <span id="fs-path">/</span>
+        </div>
+        <div id="fs-listing"></div>
+      </section>
+
+      <section id="log-section">
+        <div id="log"></div>
+      </section>
+
+      <!-- Terminal de verdade: qualquer comando de exploração (cd/cat/look/
+           scan/hack/save/ls/pwd) também pode ser digitado aqui, não só tocado. -->
+      <form id="terminal-form" autocomplete="off">
+        <span id="terminal-icon"></span>
+        <span class="terminal-prompt">&gt;</span>
+        <input
+          id="terminal-input"
+          type="text"
+          placeholder="cd, cat, hack, scan, look, save..."
+          autocapitalize="off"
+          autocorrect="off"
+          spellcheck="false"
+        >
+        <button type="submit" id="terminal-send" class="btn-icon" aria-label="enviar comando"></button>
+      </form>
+
+      <nav id="toolbar">
+        <button id="btn-scan" class="btn-toolbar btn-icon-label">SCAN</button>
+        <button id="btn-inv" class="btn-toolbar btn-icon-label">INV</button>
+        <button id="btn-save" class="btn-toolbar btn-icon-label">SAVE</button>
+      </nav>
+    </main>
+
+    <!-- Overlay de combate / LOCKDOWN -->
+    <div id="duel-overlay" class="overlay hidden">
+      <div id="duel-box">
+        <div id="duel-title"></div>
+        <div class="duel-timerbar"><div id="duel-timerfill" class="duel-timerfill"></div></div>
+        <div id="duel-round"></div>
+        <div id="duel-code"></div>
+        <input
+          id="duel-typed"
+          type="text"
+          inputmode="text"
+          autocapitalize="characters"
+          autocomplete="off"
+          autocorrect="off"
+          spellcheck="false"
+          placeholder="toque as teclas ou digite aqui"
+        >
+        <div id="keypad"></div>
+      </div>
+    </div>
+
+    <!-- Overlay de morte -->
+    <div id="dead-overlay" class="overlay hidden">
+      <div id="dead-box">
+        <div class="dead-title">SIGNAL CAPTURED</div>
+        <div id="dead-line"></div>
+        <button id="btn-reboot" class="btn-toolbar btn-icon-label">REBOOT</button>
+      </div>
+    </div>
+
+    <!-- Overlay de inventário / processos (buffer de itens + minerador) -->
+    <div id="inv-overlay" class="overlay hidden">
+      <div id="inv-box">
+        <div class="inv-title">BUFFER</div>
+        <div class="inv-stats">
+          <span>CRN <span id="inv-wallet">0</span></span>
+          <span>chave-admin <span id="inv-adminkey">0</span></span>
+          <span>RAM <span id="inv-ram">-</span></span>
+          <span>calor <span id="inv-heat">-</span></span>
+        </div>
+        <div class="inv-section-title">PROCESSOS</div>
+        <div id="inv-processes"></div>
+        <div class="inv-section-title">ITENS</div>
+        <div id="inv-list"></div>
+        <button id="btn-inv-close" class="btn-toolbar btn-icon-label">FECHAR</button>
+      </div>
+    </div>
+
+    <!-- Modal de conteúdo de arquivo -->
+    <div id="cat-overlay" class="overlay hidden">
+      <div id="cat-box">
+        <pre id="cat-content"></pre>
+        <button id="btn-cat-close" class="btn-toolbar btn-icon-label">FECHAR</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
