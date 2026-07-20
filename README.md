@@ -416,8 +416,10 @@ Um jogo de terminal vai para o itch.io como **download por plataforma**:
    marque a plataforma no upload e escreva "rode pelo terminal / duplo clique".
 
 PyInstaller empacota para o SO em que roda (sem cross-compile) — para os três
-executáveis, rode o passo 2 no Windows, no Mac e no Linux, ou deixe uma matrix
-de CI (Windows/Mac/Linux) gerar os três em `.github/workflows/`.
+executáveis, rode o passo 2 no Windows, no Mac e no Linux, ou dispare o
+workflow `.github/workflows/build.yml` (matrix Windows/Mac/Linux, aba Actions
+→ "Build itch.io executables" → Run workflow, ou automático em tag `v*`) e
+baixe os três artefatos prontos da run.
 
 ## Próximos passos sugeridos
 

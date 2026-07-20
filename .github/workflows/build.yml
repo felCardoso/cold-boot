@@ -1,0 +1,39 @@
+name: Build itch.io executables
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt pyinstaller
+
+      - name: Build executable (Windows)
+        if: runner.os == 'Windows'
+        run: pyinstaller --onefile --name coldboot --add-data "coldboot/game.tcss;coldboot" main.py
+
+      - name: Build executable (Linux/Mac)
+        if: runner.os != 'Windows'
+        run: pyinstaller --onefile --name coldboot --add-data "coldboot/game.tcss:coldboot" main.py
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coldboot-${{ runner.os }}
+          path: dist/*
