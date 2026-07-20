@@ -415,9 +415,9 @@ Um jogo de terminal vai para o itch.io como **download por plataforma**:
 3. Suba o executável de `dist/` para o itch.io (um por SO: Windows/Mac/Linux),
    marque a plataforma no upload e escreva "rode pelo terminal / duplo clique".
 
-Alternativa **jogável no navegador** (página HTML5 no itch.io): `textual serve`
-/ `textual-web` publica a TUI num terminal web via WebSocket — bom para uma demo
-online, embora ainda experimental para produção.
+PyInstaller empacota para o SO em que roda (sem cross-compile) — para os três
+executáveis, rode o passo 2 no Windows, no Mac e no Linux, ou deixe uma matrix
+de CI (Windows/Mac/Linux) gerar os três em `.github/workflows/`.
 
 ## Próximos passos sugeridos
 

@@ -13,11 +13,13 @@ venv/
 # Local game saves / settings
 .coldboot/
 
-# Web runtime session data (per-player state, not source)
-web/sessions/*.json
-
 # Screenshot previews
 preview_*.svg
+
+# PyInstaller build output (itch.io packaging — see README)
+build/
+dist/
+*.spec
 
 # OS / editor cruft
 .DS_Store
