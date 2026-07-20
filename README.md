@@ -410,10 +410,19 @@ Testes e previews usam pasta temporária: nunca escrevem no seu `~/.coldboot`.
 Um jogo de terminal vai para o itch.io como **download por plataforma**:
 
 1. `pip install pyinstaller`
-2. `pyinstaller --onefile --name coldboot --add-data "coldboot/game.tcss;coldboot" main.py`
+2. `pyinstaller --onefile --noupx --name coldboot --add-data "coldboot/game.tcss;coldboot" main.py`
    (no Linux/Mac troque `;` por `:` no `--add-data`)
 3. Suba o executável de `dist/` para o itch.io (um por SO: Windows/Mac/Linux),
    marque a plataforma no upload e escreva "rode pelo terminal / duplo clique".
+
+`--noupx` desliga a compressão UPX do bootloader: sem ela o `.exe` fica maior,
+mas evita a maior fonte de falso-positivo de antivírus (a assinatura de UPX é
+associada a packers de malware por várias heurísticas, inclusive o Defender).
+Se mesmo assim algum antivírus bloquear, é falso positivo — reportar o
+arquivo pra Microsoft (https://www.microsoft.com/wdsi/filesubmission) e/ou
+pro antivírus específico costuma resolver em alguns dias, e vale rodar o
+`.exe` pelo VirusTotal antes de subir pra ter um link de "scan limpo" pra
+colocar na página do itch.io.
 
 PyInstaller empacota para o SO em que roda (sem cross-compile) — para os três
 executáveis, rode o passo 2 no Windows, no Mac e no Linux, ou dispare o
