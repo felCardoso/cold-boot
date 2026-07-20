@@ -26,14 +26,14 @@ jobs:
 
       - name: Build executable (Windows)
         if: runner.os == 'Windows'
-        run: pyinstaller --onefile --noupx --name coldboot --add-data "coldboot/game.tcss;coldboot" main.py
+        run: pyinstaller --onedir --noupx --name coldboot --add-data "coldboot/game.tcss;coldboot" main.py
 
       - name: Build executable (Linux/Mac)
         if: runner.os != 'Windows'
-        run: pyinstaller --onefile --noupx --name coldboot --add-data "coldboot/game.tcss:coldboot" main.py
+        run: pyinstaller --onedir --noupx --name coldboot --add-data "coldboot/game.tcss:coldboot" main.py
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: coldboot-${{ runner.os }}
-          path: dist/*
+          path: dist/coldboot/*

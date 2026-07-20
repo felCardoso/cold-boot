@@ -410,19 +410,30 @@ Testes e previews usam pasta temporária: nunca escrevem no seu `~/.coldboot`.
 Um jogo de terminal vai para o itch.io como **download por plataforma**:
 
 1. `pip install pyinstaller`
-2. `pyinstaller --onefile --noupx --name coldboot --add-data "coldboot/game.tcss;coldboot" main.py`
+2. `pyinstaller --onedir --noupx --name coldboot --add-data "coldboot/game.tcss;coldboot" main.py`
    (no Linux/Mac troque `;` por `:` no `--add-data`)
-3. Suba o executável de `dist/` para o itch.io (um por SO: Windows/Mac/Linux),
-   marque a plataforma no upload e escreva "rode pelo terminal / duplo clique".
+3. Zipe a pasta inteira `dist/coldboot/` e suba pro itch.io (um zip por SO:
+   Windows/Mac/Linux), marque a plataforma no upload e escreva "extraia e
+   rode `coldboot.exe` (ou `./coldboot` no Linux/Mac) pelo terminal / duplo
+   clique".
 
-`--noupx` desliga a compressão UPX do bootloader: sem ela o `.exe` fica maior,
-mas evita a maior fonte de falso-positivo de antivírus (a assinatura de UPX é
-associada a packers de malware por várias heurísticas, inclusive o Defender).
+Duas escolhas contra falso-positivo de antivírus (comum em jogos empacotados
+com PyInstaller, não é nada de errado no código):
+- `--noupx` desliga a compressão UPX do bootloader — a assinatura de UPX é
+  associada a packers de malware por várias heurísticas, inclusive o Defender.
+- `--onedir` no lugar de `--onefile`: o modo "arquivo único" se auto-extrai
+  numa pasta temporária toda vez que roda, e esse comportamento de "dropper"
+  é o gatilho mais comum de detecção heurística tipo `Trojan:Win32/Wacatac`
+  no Defender. `--onedir` já entrega os arquivos soltos, sem esse passo — o
+  preço é distribuir uma pasta (zipada) em vez de um `.exe` só.
+
 Se mesmo assim algum antivírus bloquear, é falso positivo — reportar o
 arquivo pra Microsoft (https://www.microsoft.com/wdsi/filesubmission) e/ou
 pro antivírus específico costuma resolver em alguns dias, e vale rodar o
-`.exe` pelo VirusTotal antes de subir pra ter um link de "scan limpo" pra
-colocar na página do itch.io.
+executável pelo VirusTotal antes de subir pra ter um link de "scan limpo"
+pra colocar na página do itch.io (e considerar avisar na própria página que
+o Defender pode alertar falso positivo — é comum o bastante entre jogos
+indie em Python que virou prática padrão avisar).
 
 PyInstaller empacota para o SO em que roda (sem cross-compile) — para os três
 executáveis, rode o passo 2 no Windows, no Mac e no Linux, ou dispare o
