@@ -26,7 +26,14 @@ from coldboot.combat import CombatSession, make_ice
 from coldboot.lockdown import LockdownSession
 from coldboot.procgen import filesystem as fsmod, loot
 from coldboot.ui import render_map, render_rig, render_status
-from coldboot.world import new_game, next_run, sector_payout
+from coldboot.world import (
+    ACHIEVEMENTS,
+    SECTOR_MODIFIERS,
+    new_game,
+    next_run,
+    sector_payout,
+    unlock_achievements,
+)
 
 
 def ok(cond, label):
@@ -315,6 +322,9 @@ def test_savegame(tmp):
     st.rig.cooler = "cool_fans"
     st.rig.ram.append("ram_d3_4")
     st.cwd = ["var", "log"]
+    st.total_earned = 250.75
+    st.deaths = 2
+    st.achievements = {"first_core", "deep_5"}
     alvo = st.net["GATE"].fs.children["home"].children["admin"]
     alvo.locked = False                                  # destrancado na partida
     st.net["GATE"].fs.children["tmp"].children.clear()   # item consumido
@@ -337,6 +347,10 @@ def test_savegame(tmp):
        "save: item carregado volta achável por kind e por nome")
     ok((r.run_number, r.runs_won) == (st.run_number, st.runs_won),
        "save: contadores de incursão voltam")
+    ok((r.total_earned, r.deaths) == (250.75, 2),
+       "save: meta-progressão lifetime (total_earned/deaths) volta")
+    ok(r.achievements == {"first_core", "deep_5"},
+       "save: conquistas desbloqueadas voltam")
     ok(r.ram_free == st.ram_free, "save: RAM do host é derivada, não salva torta")
     ok(r.rig.cooler == "cool_fans" and r.rig.ram == ["ram_d3_4", "ram_d3_4"],
        "save: o rig montado volta peça por peça")
@@ -387,6 +401,21 @@ def test_savegame(tmp):
     savegame.save(velho, p)
     ok(json.loads(p.read_text(encoding="utf-8"))["version"] == savegame.SAVE_VERSION,
        "migração: regravar sobe o save para a versão atual")
+
+    # --- Migração v3 -> v4 ---
+    # v3 não tinha meta-progressão lifetime (total_earned/deaths/achievements).
+    # Quem já tinha um save assim precisa entrar zerado, não quebrar o load.
+    v3 = json.loads(p.read_text(encoding="utf-8"))
+    v3["version"] = 3
+    v3.pop("total_earned", None)
+    v3.pop("deaths", None)
+    v3.pop("achievements", None)
+    p.write_text(json.dumps(v3), encoding="utf-8")
+    v4 = savegame.load(p)
+    ok(v4 is not None, "migração: save v3 continua carregando")
+    ok((v4.total_earned, v4.deaths) == (0.0, 0),
+       "migração: v3 entra com meta-progressão lifetime zerada")
+    ok(v4.achievements == set(), "migração: v3 entra sem conquistas")
 
     # Save de versão futura é recusado em vez de carregar torto.
     d = json.loads(p.read_text(encoding="utf-8"))
@@ -772,7 +801,83 @@ def test_sector_modifiers():
     boss_punitivo = make_boss(4, pen_mult=1.3)
     ok(boss_punitivo.trace_penalty > boss_normal.trace_penalty,
        "modificador: pen_mult também vale para o boss")
+
+    # Todo modificador do catálogo tem nome/descrição nos dois idiomas — uma
+    # entrada sem i18n cairia no fallback "[chave]" na tela.
+    locale_original = i18n.get_locale()
+    for mid in SECTOR_MODIFIERS:
+        for suf in ("name", "desc"):
+            chave = f"world_mod_{mid}_{suf}"
+            for locale in i18n.LOCALES:
+                i18n.set_locale(locale)
+                texto = i18n.t(chave)
+                ok(texto and not texto.startswith("["),
+                   f"modificador: {mid}_{suf} tem texto em {locale}")
+    i18n.set_locale(locale_original)
+    # Cada eixo (creep/ice/botnet) aparece nas duas direções (bônus e custo de
+    # payout) — nenhum modificador deixa um eixo "só favorável" na tabela toda.
+    for eixo in ("creep_mult", "ice_penalty_mult", "botnet_risk_mult"):
+        valores = [getattr(m, eixo) for m in SECTOR_MODIFIERS.values() if getattr(m, eixo) != 1.0]
+        ok(any(v < 1.0 for v in valores) and any(v > 1.0 for v in valores),
+           f"modificador: eixo {eixo} tem as duas direções representadas")
     print("--- modificadores de setor OK ---")
+
+
+def test_achievements():
+    from coldboot.state import GameState
+
+    # Catálogo: todo id tem nome/descrição nos dois idiomas.
+    locale_original = i18n.get_locale()
+    for ach in ACHIEVEMENTS:
+        for suf in ("name", "desc"):
+            chave = f"ach_{ach.id}_{suf}"
+            for locale in i18n.LOCALES:
+                i18n.set_locale(locale)
+                texto = i18n.t(chave)
+                ok(texto and not texto.startswith("["),
+                   f"conquistas: {chave} tem texto em {locale}")
+    i18n.set_locale(locale_original)
+
+    # Estado cru: nada desbloqueado, unlock_achievements não quebra nem
+    # desbloqueia nada sem o estado bater o limiar.
+    st = GameState()
+    ok(unlock_achievements(st) == [], "conquistas: estado cru não desbloqueia nada")
+    ok(st.achievements == set(), "conquistas: estado cru começa sem conquistas")
+
+    # Bater um limiar desbloqueia e devolve só o id NOVO.
+    st.runs_won = 1
+    novas = unlock_achievements(st)
+    ok(novas == ["first_core"], "conquistas: bater o limiar desbloqueia o id certo")
+    ok("first_core" in st.achievements, "conquistas: fica registrado no estado")
+
+    # Chamar de novo sem mudar nada não desbloqueia de novo (idempotente).
+    ok(unlock_achievements(st) == [], "conquistas: idempotente sem novo progresso")
+
+    # Vários limiares batidos ao mesmo tempo desbloqueiam todos de uma vez.
+    st.best_sector = 12
+    st.total_earned = 6000
+    st.deaths = 5
+    st.runs_won = 11
+    novas = unlock_achievements(st)
+    ok(set(novas) == {"deep_5", "deep_10", "payout_1k", "payout_5k", "resilient", "veteran"},
+       "conquistas: vários limiares batidos de uma vez desbloqueiam juntos")
+    ok(len(st.achievements) == len(ACHIEVEMENTS), "conquistas: catálogo inteiro desbloqueável")
+
+    # next_run carrega a meta-progressão lifetime pra frente, ganhando OU
+    # morrendo — ao contrário de wallet, que zera na morte.
+    prev = new_game(1)
+    prev.total_earned = 42.0
+    prev.deaths = 1
+    prev.achievements = {"first_core"}
+    ganhou = next_run(prev, won=True)
+    ok(ganhou.total_earned == 42.0 and ganhou.achievements == {"first_core"},
+       "conquistas: next_run(won=True) carrega total_earned/achievements")
+    ok(ganhou.deaths == 1, "conquistas: vencer não conta como morte")
+    morreu = next_run(prev, won=False)
+    ok(morreu.total_earned == 42.0 and morreu.achievements == {"first_core"},
+       "conquistas: next_run(won=False) também carrega total_earned/achievements")
+    ok(morreu.deaths == 2, "conquistas: morrer incrementa o contador de mortes")
+    print("--- conquistas OK ---")
 
 
 def test_folders():
@@ -1804,6 +1909,24 @@ async def test_gameplay_additions(tmp: Path):
         await submit(pilot, app, "modifier")
         ok(app.mode == "explore", "gameplay: consultar o modificador não muda de modo")
 
+    # --- Comando `achievements`: lista conquistas, e desbloquear narra ---
+    app = ColdBootApp(seed=21, boot=False, tutorial_on=False,
+                       save_path=tmp / "ach.json", settings_path=tmp / "achcfg.json")
+    async with app.run_test(size=(120, 40)) as pilot:
+        await pilot.pause()
+        app.narrative.speed_mult = 500.0
+        st = app.state
+        await submit(pilot, app, "achievements")
+        ok(app.mode == "explore", "gameplay: listar conquistas não muda de modo")
+        ok(st.achievements == set(), "gameplay: run nova começa sem conquista nenhuma")
+
+        st.runs_won = 1
+        app._announce_achievements()
+        ok("first_core" in st.achievements,
+           "gameplay: _announce_achievements desbloqueia ao bater o limiar")
+        await submit(pilot, app, "achievements")
+        ok(app.mode == "explore", "gameplay: listar de novo após desbloquear não quebra")
+
     # --- Cifra: minigame de dedução, 3x por setor, reduz trace ao vencer ---
     app = ColdBootApp(seed=21, boot=False, tutorial_on=False,
                       save_path=tmp / "cph.json", settings_path=tmp / "cphcfg.json")
@@ -1991,6 +2114,7 @@ def main():
     test_keycard_world()
     test_sectors()
     test_sector_modifiers()
+    test_achievements()
     test_folders()
     test_router_and_telemetry()
     test_cart()

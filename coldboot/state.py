@@ -105,6 +105,12 @@ class GameState:
     sector: int = 1
     best_sector: int = 1
 
+    # Meta-progressão de verdade: sobrevive a mortes E a trocas de setor (ver
+    # world.next_run) — ao contrário de wallet, que zera ao morrer.
+    total_earned: float = 0.0   # soma de todo CRN já sacado ao limpar um CORE
+    deaths: int = 0             # quantas vezes o LOCKDOWN venceu (setor voltou a 1)
+    achievements: set[str] = field(default_factory=set)
+
     # Modificador do setor (ver world.SECTOR_MODIFIERS): sorteado uma vez em
     # new_game() e guardado já resolvido em multiplicadores — quem consome
     # (economy.py, combat.py) só lê um float, sem precisar importar world.py.

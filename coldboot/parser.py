@@ -105,6 +105,8 @@ _SHELL = {
     "modifier": "modifier",
     "modificador": "modifier",
     "mod": "modifier",
+    "achievements": "achievements",
+    "conquistas": "achievements",
 }
 
 # Verbos de linguagem natural (PT) -> canônico + eventual normalização de args
@@ -177,6 +179,7 @@ COMPLETION_VERBS = [
     "cipher",
     "cifrar",
     "modifier",
+    "achievements",
 ]
 
 

@@ -43,12 +43,14 @@ from .screens import BootScreen, DeskScreen, PauseScreen, ShopScreen
 from .state import FSNode
 from .ui import NarrativeView, random_syslog, render_map, render_rig, render_status
 from .world import (
+    ACHIEVEMENTS,
     PUZZLE_TRACE_RELIEF,
     VILLAIN_LINES,
     new_game,
     next_run,
     puzzle_reward,
     sector_payout,
+    unlock_achievements,
 )
 
 # O minigame de cifra (ver cipher.py) é limitado por setor: joga-se no máximo
@@ -126,6 +128,7 @@ def _help_sections() -> list[tuple[str, list[tuple[str, str]]]]:
                 ("save", i18n.t("app_help_save")),
                 ("desk", i18n.t("app_help_desk")),
                 ("reboot", i18n.t("app_help_reboot")),
+                ("achievements", i18n.t("app_help_achievements")),
                 ("clear", i18n.t("app_help_clear")),
                 ("help", i18n.t("app_help_help")),
                 ("exit", i18n.t("app_help_exit")),
@@ -906,6 +909,21 @@ class ColdBootApp(App):
             "bold yellow",
         )
 
+    def do_achievements(self, cmd) -> None:
+        st = self.state
+        self.narrative.narrate(
+            i18n.t("app_achievements_header", n=len(st.achievements), total=len(ACHIEVEMENTS)),
+            "bold cyan",
+            0.0,
+        )
+        linhas = []
+        for ach in ACHIEVEMENTS:
+            unlocked = ach.id in st.achievements
+            marca = "[x]" if unlocked else "[ ]"
+            desc = i18n.t(f"ach_{ach.id}_desc") if unlocked else i18n.t("app_achievement_locked")
+            linhas.append(f"{marca} {i18n.t(f'ach_{ach.id}_name')} — {desc}")
+        self.narrative.narrate("\n".join(linhas), "green3", 0.0)
+
     def do_hack(self, cmd) -> None:
         if not cmd.target:
             self.narrative.narrate(i18n.t("app_hack_no_target"), "red")
@@ -1513,6 +1531,7 @@ class ColdBootApp(App):
         if self.mode == "dead":
             # Morrer joga de volta ao setor 1: o rig é o único ratchet.
             self.state = next_run(self.state, won=False)
+            self._announce_achievements()
             self.combat = None
             self.cipher = None
             self.lockdown = None
@@ -1539,6 +1558,9 @@ class ColdBootApp(App):
         self.state.run_number = st.run_number + 1
         self.state.runs_won = st.runs_won
         self.state.best_sector = st.best_sector
+        self.state.total_earned = st.total_earned
+        self.state.deaths = st.deaths
+        self.state.achievements = set(st.achievements)
         for k, v in st.flags.items():
             if k.startswith("hint_"):
                 self.state.flags[k] = v
@@ -1864,10 +1886,20 @@ class ColdBootApp(App):
         )
         # Avança o setor e volta para a mesa: gastar, montar, decidir descer.
         self.state = next_run(st, won=True)
+        self.state.total_earned = round(self.state.total_earned + premio, 2)
+        self._announce_achievements()
         self.reset_lockdown()
         self.combat = None
         self.cipher = None
         self.go_desk("clear")
+
+    def _announce_achievements(self) -> None:
+        for aid in unlock_achievements(self.state):
+            self.narrative.narrate(
+                i18n.t("app_achievement_unlocked", name=i18n.t(f"ach_{aid}_name")),
+                "bold magenta",
+                0.01,
+            )
 
 
 def run() -> None:

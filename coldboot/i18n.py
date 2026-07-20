@@ -787,6 +787,10 @@ _CATALOG: dict[str, dict[str, str]] = {
         "en": "show the sector's active modifier effect",
         "pt": "mostra o efeito do modificador ativo do setor",
     },
+    "app_help_achievements": {
+        "en": "show meta-progression achievements, unlocked and locked",
+        "pt": "mostra as conquistas de meta-progressão, desbloqueadas e travadas",
+    },
     # app.py — do_decrypt (não listado no `help` de propósito — é achado lendo
     # os fragmentos, não escaneando comandos)
     "app_decrypt_missing_arg": {
@@ -1369,6 +1373,22 @@ _CATALOG: dict[str, dict[str, str]] = {
         "en": "ICE punishes 25% softer per mistake, but payout reduced 15%",
         "pt": "o ICE pune 25% mais fraco por erro, mas o pagamento cai 15%",
     },
+    "world_mod_noisy_signal_name": {
+        "en": "Noisy Signal",
+        "pt": "Sinal Ruidoso",
+    },
+    "world_mod_noisy_signal_desc": {
+        "en": "ambient trace rises 30% faster, but payout raised 15%",
+        "pt": "o trace ambiente sobe 30% mais rápido, mas o pagamento sobe 15%",
+    },
+    "world_mod_loud_botnet_name": {
+        "en": "Loud Botnet",
+        "pt": "Botnet Barulhenta",
+    },
+    "world_mod_loud_botnet_desc": {
+        "en": "planted scripts 50% more likely to be discovered, but payout raised 15%",
+        "pt": "scripts plantados com 50% mais chance de serem descobertos, mas o pagamento sobe 15%",
+    },
     # app.py — _start_session
     "app_session_sector_seed": {
         "en": "// sector {sector} — seed: {seed}",
@@ -1409,6 +1429,75 @@ _CATALOG: dict[str, dict[str, str]] = {
     "app_modifier_none": {
         "en": "no active modifier",
         "pt": "nenhum modificador ativo",
+    },
+    # app.py — do_achievements / _announce_achievements
+    "app_achievement_unlocked": {
+        "en": "[achievement unlocked] {name}",
+        "pt": "[conquista desbloqueada] {name}",
+    },
+    "app_achievement_locked": {
+        "en": "locked",
+        "pt": "travada",
+    },
+    "app_achievements_header": {
+        "en": "== ACHIEVEMENTS ({n}/{total}) ==",
+        "pt": "== CONQUISTAS ({n}/{total}) ==",
+    },
+    "ach_first_core_name": {
+        "en": "First Core",
+        "pt": "Primeiro Núcleo",
+    },
+    "ach_first_core_desc": {
+        "en": "compromise a sector's CORE for the first time",
+        "pt": "comprometa o CORE de um setor pela primeira vez",
+    },
+    "ach_deep_5_name": {
+        "en": "Descent",
+        "pt": "Descida",
+    },
+    "ach_deep_5_desc": {
+        "en": "reach sector 5",
+        "pt": "chegue ao setor 5",
+    },
+    "ach_deep_10_name": {
+        "en": "Free Fall",
+        "pt": "Queda Livre",
+    },
+    "ach_deep_10_desc": {
+        "en": "reach sector 10",
+        "pt": "chegue ao setor 10",
+    },
+    "ach_payout_1k_name": {
+        "en": "First Grand",
+        "pt": "Primeiro Milhar",
+    },
+    "ach_payout_1k_desc": {
+        "en": "earn 1000 CRN total from cleared COREs",
+        "pt": "acumule 1000 CRN sacados de CORE limpo",
+    },
+    "ach_payout_5k_name": {
+        "en": "Crypto Baron",
+        "pt": "Barão da Cripto",
+    },
+    "ach_payout_5k_desc": {
+        "en": "earn 5000 CRN total from cleared COREs",
+        "pt": "acumule 5000 CRN sacados de CORE limpo",
+    },
+    "ach_resilient_name": {
+        "en": "Reboot and Try Again",
+        "pt": "Reinicia e Tenta de Novo",
+    },
+    "ach_resilient_desc": {
+        "en": "get caught by LOCKDOWN 3 times and keep coming back",
+        "pt": "seja pego pelo LOCKDOWN 3 vezes e continue voltando",
+    },
+    "ach_veteran_name": {
+        "en": "Veteran",
+        "pt": "Veterano",
+    },
+    "ach_veteran_desc": {
+        "en": "clear 10 sector COREs total",
+        "pt": "limpe 10 COREs de setor no total",
     },
     # app.py — load_game
     "app_load_no_save": {
