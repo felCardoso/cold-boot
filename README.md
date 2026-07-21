@@ -394,11 +394,45 @@ setor. Pelo caminho, minerar CRN para comprar hardware (ou plantar minerador
 remoto num host comprometido) — sabendo que minerar é justamente o que te
 entrega. Depois, `reboot`, e de novo, com um rig melhor.
 
+### Breach System (`coldboot/breach/`)
+
+Um segundo módulo, independente do jogo Textual acima, com comandos de
+hacking no estilo Unix de verdade (`nmap`, `grep`, `base64 -d`, `ssh`) em vez
+dos verbos abstratos (`scan`/`hack`) do jogo principal:
+
+| Papel | Arquivo | Responsabilidade |
+|---|---|---|
+| **Rede simulada** | `breach/network.py` | `VirtualNetwork`/`VirtualHost`: IPs, portas, credenciais, arquivos. |
+| **Parser** | `breach/parser.py` | `CommandParser`: valida a sintaxe de cada comando antes de executar. |
+| **Execução** | `breach/commands.py` | Confere o conteúdo (host existe? credencial bate?) e aplica efeitos. |
+| **Estado** | `breach/game_state.py` | `GameState`: Trace Level (0–100%), nó atual, progresso do tutorial. |
+| **Tutorial** | `breach/tutorial.py` | `run_tutorial()`: fluxo guiado pelo NPC Ghost_0x, etapa por etapa. |
+
+`nmap <ip>` lista as portas conhecidas (21/FTP, 22/SSH, 23/TELNET, 80/HTTP,
+443/HTTPS, 3306/MYSQL) como abertas ou fechadas; `grep <termo> <arquivo>` e
+`cat <arquivo>` leem os logs do host; `base64 -d <alvo>` decodifica um hash
+encontrado num log (aceita a string ou o caminho do arquivo); `ssh
+<usuario>@<ip> -p <senha>` autentica — sucesso pivota a sessão para o nó
+invadido (`is_hacked`), falha soma **+15%** de Trace. Qualquer outro erro de
+comando soma **+5%**. Ao atingir 100%, a sessão é encerrada.
+
+O tutorial roteiriza a primeira invasão (`127.0.0.1` → `192.168.1.100`, a
+"Corporação Acadêmica"): reconhecimento com `nmap`, achar o hash vazado no
+log do FTP com `cat`/`grep`, decodificar com `base64 -d`, e autenticar com
+`ssh`. Cada etapa trava os outros comandos até a certa ser executada —
+`help`/`clear`/`exit` sempre funcionam.
+
+```
+python -m coldboot.breach       # joga o tutorial num terminal puro
+python test_breach_system.py    # testes headless (parser, comandos, Trace, tutorial)
+```
+
 ## Testes
 
 ```
 python smoke_test.py            # verificação headless (Pilot): parser, comandos,
                                 # combate, economia, save/load, boot e pausa
+python test_breach_system.py     # Breach System: nmap/grep/base64/ssh + tutorial
 python screenshot.py 42 explore  # exporta preview_<cena>.svg da TUI
 ```
 
